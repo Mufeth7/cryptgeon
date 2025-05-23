@@ -1,0 +1,79 @@
+services:
+
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+#      - "8080:8080"         
+    command:
+#      - "--api.insecure=true"
+#      - "--api.dashboard=true" 
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.encrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.encrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.encrypt.acme.email=example@example.com" # add your email address
+      - "--certificatesresolvers.encrypt.acme.storage=/acme.json"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /opt/traefik/acme.json:/acme.json
+    networks:
+      - cryptgeon
+
+  redis:
+    image: public.ecr.aws/docker/library/redis:7-alpine
+    # This is required to stay in RAM only.
+    command: redis-server --save "" --appendonly no
+    # Set a size limit. See link below on how to customise.
+    # https://redis.io/docs/latest/operate/rs/databases/memory-performance/eviction-policy/
+#     --maxmemory 1gb --maxmemory-policy allkeys-lrulpine
+    # This prevents the creation of an anonymous volume.
+    tmpfs:
+      - /data
+#    ports:
+#      - 6379:6379
+    networks:
+      - cryptgeon
+
+  app:
+    image: cupcakearmy/cryptgeon:latest
+    depends_on:
+      - redis
+    env_file: .env.dev
+    environment:
+      REDIS_URL: redis://redis:6379
+      # Size limit for a single note.
+      SIZE_LIMIT: 40MiB
+      LISTEN_ADDR: 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cryptgeon.rule=Host(`example.com`)" # Use your domain name here 
+      - "traefik.http.routers.cryptgeon.entrypoints=websecure"
+      - "traefik.http.routers.cryptgeon.tls=true"
+      - "traefik.http.routers.cryptgeon.tls.certresolver=encrypt"
+      - "traefik.http.services.cryptgeon.loadbalancer.server.port=8000"
+#      - "traefik.http.routers.cryptgeon.middlewares=cryptgeon-auth"
+#      - "traefik.http.middlewares.cryptgeon-auth.basicauth.users=user:$$2y$$05$$juUw0zgc5ebvJ00MFPVVLujF6P.rcEMbGZ99Jfq6ZWEa1dgetacEq"
+    networks:
+      - cryptgeon
+
+networks:
+  cryptgeon:
+    driver: bridge
+
+    # Optional health checks
+    # healthcheck:
+    #   test: ["CMD", "curl", "--fail", "http://127.0.0.1:8000/api/live/"]
+    #   interval: 1m
+    #   timeout: 3s
+    #   retries: 2
+    #   start_period: 5s
