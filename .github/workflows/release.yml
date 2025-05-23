@@ -9,6 +9,7 @@ permissions:
   contents: read
 env:
   REPOSITORY_NAME: cryptgeon
+  AWS_ALIAS: r9h8b0z6
 
 jobs:
   AWS:
@@ -31,6 +32,6 @@ jobs:
       - name: Build, tag, and push the image to Amazon ECR
         id: build-image
         run: |
-          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/r9h8b0z6
-          docker build -t public.ecr.aws/r9h8b0z6/$REPOSITORY_NAME:latest .
-          docker push public.ecr.aws/r9h8b0z6/$REPOSITORY_NAME:latest
+          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/$AWS_ALIAS
+          docker build -t public.ecr.aws/$AWS_ALIAS/$REPOSITORY_NAME:latest .
+          docker push public.ecr.aws/$AWS_ALIAS/$REPOSITORY_NAME:latest
