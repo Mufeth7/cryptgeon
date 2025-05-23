@@ -17,7 +17,7 @@ networks:
 
 services:
   redis:
-    image: redis:7-alpine
+    image: public.ecr.aws/docker/library/redis:7-alpine
     # This is required to stay in RAM only.
     command: redis-server --save "" --appendonly no
     # Set a size limit. See link below on how to customise.
@@ -49,7 +49,7 @@ Some times it's useful to hide the service behind auth. This is easily achieved 
 ```yaml
 services:
   traefik:
-    image: traefik:v3.0
+    image: public.ecr.aws/docker/library/traefik:v3.0
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
@@ -61,7 +61,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
   redis:
-    image: redis:7-alpine
+    image: public.ecr.aws/docker/library/redis:7-alpine
     # This is required to stay in RAM only.
     command: redis-server --save "" --appendonly no
     # Set a size limit. See link below on how to customise.

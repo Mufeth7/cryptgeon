@@ -28,7 +28,7 @@ This is a tiny guide to install cryptgeon on (probably) any unix system (and may
 version: '3.8'
 services:
   traefik:
-    image: traefik:2.6
+    image: public.ecr.aws/docker/library/traefik:2.6
     restart: unless-stopped
     ports:
       - '80:80'
@@ -108,7 +108,7 @@ networks:
 
 services:
   redis:
-    image: redis:7-alpine
+    image: public.ecr.aws/docker/library/redis:7-alpine
     # This is required to stay in RAM only.
     command: redis-server --save "" --appendonly no
     # Set a size limit. See link below on how to customise.
